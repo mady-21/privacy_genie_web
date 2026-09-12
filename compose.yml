@@ -1,0 +1,18 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: privacy-genie-web
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    networks:
+      - privacy-genie-network
+
+networks:
+  privacy-genie-network:
+    external: true
