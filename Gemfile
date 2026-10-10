@@ -17,7 +17,7 @@ gem "stimulus-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
 
-gem "json", "~> 2.0"
+gem "json", "~> 3.0"
 
 gem "faraday"
 
