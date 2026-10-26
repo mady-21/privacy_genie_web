@@ -28,5 +28,4 @@ class DocumentSupplement < ApplicationRecord
       raise ActiveRecord::DeleteRestrictionError.new(:document_chunks)
     end
   end
-
 end
