@@ -59,7 +59,7 @@ development:
 # Do not set this db to the same as development or production.
 test:
   <<: *default
-  database: privacy_genie_development
+  database: privacy_genie_test
   username: privacy_genie
   password: privacy_genie_dev
   host: privacy-db
