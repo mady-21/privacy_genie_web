@@ -4,16 +4,24 @@ class DocumentChunkTest < ActiveSupport::TestCase
   setup do
     @document = Document.create!(source_key: "test_privacy_act", name: "법률", document_type: "act")
     @other = Document.create!(source_key: "test_privacy_decree", name: "시행령", document_type: "decree")
-    @supplement = @document.document_supplements.create!(source_key: "supplement-1", heading: "부칙")
-    @chunk = @document.document_chunks.build(position: 1, article_number: "제1조", text: "본문")
+    @chunk = build_chunk(@document, chunk_id: "act:제1조:1", position: 1)
   end
 
-  test "requires document article number and nonblank text" do
+  test "requires document chunk id article number nonblank text and embedding" do
     @chunk.document = nil
+    @chunk.chunk_id = ""
     @chunk.article_number = ""
     @chunk.text = " \n "
+    @chunk.embedding = nil
     assert_not @chunk.valid?
-    %i[document article_number text].each { |field| assert @chunk.errors[field].any? }
+    %i[document chunk_id article_number text embedding].each { |field| assert @chunk.errors[field].any?, field }
+  end
+
+  test "chunk id is unique across documents" do
+    @chunk.save!
+    duplicate = build_chunk(@other, chunk_id: @chunk.chunk_id, position: 1)
+    assert_not duplicate.valid?
+    assert duplicate.errors[:chunk_id].any?
   end
 
   test "position must be a positive integer" do
@@ -26,10 +34,59 @@ class DocumentChunkTest < ActiveSupport::TestCase
 
   test "position is unique within a document" do
     @chunk.save!
-    duplicate = @document.document_chunks.build(position: 1, article_number: "제2조", text: "본문")
+    duplicate = build_chunk(@document, chunk_id: "act:제2조:1", position: 1)
     assert_not duplicate.valid?
     assert duplicate.errors[:position].any?
-    assert @other.document_chunks.build(position: 1, article_number: "제1조", text: "본문").valid?
+    assert build_chunk(@other, chunk_id: "decree:제1조:1", position: 1).valid?
+  end
+
+  test "part index must be within part count" do
+    @chunk.part_index = 2
+    @chunk.part_count = 3
+    assert @chunk.valid?
+
+    @chunk.part_index = 4
+    assert_not @chunk.valid?
+    assert @chunk.errors[:part_index].any?
+
+    [ nil, 0 ].each do |value|
+      @chunk.part_count = value
+      assert_not @chunk.valid?
+      assert @chunk.errors[:part_count].any?
+    end
+  end
+
+  test "pending chunks need an article effective date" do
+    @chunk.is_effective = false
+    assert_not @chunk.valid?
+    assert @chunk.errors[:article_effective_date].any?
+
+    @chunk.article_effective_date = Date.new(2027, 7, 1)
+    assert @chunk.valid?
+  end
+
+  test "database rejects a pending chunk without an effective date" do
+    @chunk.save!
+    assert_raises(ActiveRecord::StatementInvalid) do
+      DocumentChunk.transaction(requires_new: true) do
+        @chunk.update_columns(is_effective: false, article_effective_date: nil)
+      end
+    end
+  end
+
+  test "embedding must have 1024 dimensions" do
+    @chunk.embedding = [ 1.0, 0.0 ]
+    assert_not @chunk.valid?
+    assert @chunk.errors[:embedding].any?
+  end
+
+  test "embedding round trips through the vector column" do
+    vector = embedding(0 => 3, 5 => 4)
+    @chunk.embedding = vector
+    @chunk.save!
+    assert_equal DocumentChunk::EMBEDDING_DIMENSION, @chunk.reload.embedding.size
+    assert_in_delta 0.6, @chunk.embedding[0], 1e-6
+    assert_in_delta 0.8, @chunk.embedding[5], 1e-6
   end
 
   test "metadata accepts an object and rejects other JSON types" do
@@ -44,33 +101,21 @@ class DocumentChunkTest < ActiveSupport::TestCase
     end
   end
 
-  test "allows main body or a supplement of the same document" do
-    assert @chunk.valid?
-    @chunk.document_supplement = @supplement
-    assert @chunk.valid?
-  end
-
-  test "rejects a supplement from another document" do
-    foreign_supplement = @other.document_supplements.create!(source_key: "supplement-1", heading: "부칙")
-    @chunk.document_supplement = foreign_supplement
-    assert_not @chunk.valid?
-    assert @chunk.errors[:document_supplement].any?
-  end
-
-  test "does not treat two different unsaved documents as the same document" do
-    first = Document.new(source_key: "new-act", name: "법률", document_type: "act")
-    second = Document.new(source_key: "new-decree", name: "시행령", document_type: "decree")
-    @chunk.document = first
-    @chunk.document_supplement = second.document_supplements.build(source_key: "supplement-1", heading: "부칙")
-    assert_not @chunk.valid?
-    assert @chunk.errors[:document_supplement].any?
-  end
-
-  test "scopes separate main and supplement chunks and order them" do
-    extra = @document.document_chunks.create!(position: 2, article_number: "제1조", text: "부칙 본문", document_supplement: @supplement)
+  test "scopes split effective and pending chunks and order them" do
+    pending = build_chunk(@document, chunk_id: "act:제1조:2", position: 2,
+      is_effective: false, article_effective_date: Date.new(2027, 7, 1))
+    pending.save!
     @chunk.save!
-    assert_equal [ @chunk.id ], @document.document_chunks.main_body.pluck(:id)
-    assert_equal [ extra.id ], @document.document_chunks.supplementary.pluck(:id)
-    assert_equal [ @chunk.id, extra.id ], @document.document_chunks.ordered.pluck(:id)
+    assert_equal [ @chunk.id ], @document.document_chunks.effective.pluck(:id)
+    assert_equal [ pending.id ], @document.document_chunks.pending.pluck(:id)
+    assert_equal [ @chunk.id, pending.id ], @document.document_chunks.ordered.pluck(:id)
+  end
+
+  private
+
+  def build_chunk(document, **attributes)
+    document.document_chunks.build(
+      part_index: 1, part_count: 1, article_number: "제1조", text: "본문", embedding: embedding, **attributes
+    )
   end
 end
