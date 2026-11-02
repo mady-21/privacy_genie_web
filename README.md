@@ -84,11 +84,44 @@ docker exec privacy-genie-web bin/rails search:evaluate MIN_RECALL=0.9          
 조번호·조각·시행 상태(현행, 미시행 시행일, 개정 예정일)·원문을 보여 줍니다. 개발 도구라 운영 환경에는 라우트가 없습니다
 (`Rails.env.local?`일 때만). 최종 화면은 AI 답변을 붙인 뒤 따로 설계합니다.
 
+### LLM 호출
+
+Claude, GPT 등을 같은 인터페이스로 부릅니다. provider별 차이(요청 형식, 시스템 프롬프트 위치, 종료 사유 이름,
+에러 형식)는 `app/clients/llm/`의 어댑터 안에만 둡니다.
+
+```ruby
+response = Llm.provider.generate(          # 이름을 넘기면 다른 provider: Llm.provider("openai")
+  messages: [ Llm::Message.user("질문") ],
+  system: "법령에 근거해 답하세요",
+  max_tokens: 1024
+)
+response.text           # 답변
+response.stop_reason    # :end_turn, :max_tokens, :refusal, :other
+response.input_tokens   # 토큰·지연시간(latency_ms)으로 provider를 비교할 수 있습니다
+```
+
+설정은 `config/llm.yml`이 `.env`에서 읽습니다.
+
+| 변수 | 설명 |
+|---|---|
+| `LLM_PROVIDER` | 기본 provider. `anthropic`(기본값) 또는 `openai` |
+| `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | 모델 기본값은 `claude-sonnet-5` |
+| `OPENAI_API_KEY`, `OPENAI_MODEL` | 모델은 꼭 지정해야 합니다 |
+| `ANTHROPIC_BASE_URL`, `OPENAI_BASE_URL` | 선택. 프록시나 OpenAI 호환 서버를 쓸 때 |
+
+에러는 `Llm::Error` 하위 타입으로 통일합니다. `RateLimitError`·`ServiceUnavailableError`는 잠시 뒤 재시도하거나
+다른 provider로 넘길 수 있고, `AuthenticationError`·`InvalidRequestError`·`ConfigurationError`는 재시도해도
+소용없습니다. 재시도는 HTTP 클라이언트가 아니라 호출하는 쪽(Job 등)에서 정합니다.
+
+새 provider는 `Llm::Base`를 상속해 요청·응답 변환만 구현하고 `Llm::PROVIDERS`에 등록합니다. 테스트에
+`LlmProviderContract`를 include하면 공통 동작(에러 변환, 설정 검증, 응답 형식)을 같은 기준으로 검증합니다.
+
 ### 테스트
 
 ```bash
 docker exec privacy-genie-web bin/rails db:test:prepare test
 ```
 
-doc API는 `test/support/fake_doc_client.rb`로 대신하고, 클라이언트는 Faraday 테스트 어댑터로 검증합니다.
+doc API는 `test/support/fake_doc_client.rb`로 대신하고, doc·LLM 클라이언트는 Faraday 테스트 어댑터로 검증합니다.
+테스트에서 실제 LLM API는 부르지 않습니다.
 DB는 pgvector 확장이 있어야 하므로 로컬과 CI 모두 `pgvector/pgvector:pg17` 이미지를 씁니다.

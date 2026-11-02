@@ -1,0 +1,12 @@
+# Llm.provider가 읽는 설정. 키·모델은 .env로 넣는다.
+shared:
+  default_provider: <%= ENV.fetch("LLM_PROVIDER", "anthropic") %>
+  providers:
+    anthropic:
+      api_key: <%= ENV["ANTHROPIC_API_KEY"] %>
+      model: <%= ENV.fetch("ANTHROPIC_MODEL", "claude-sonnet-5") %>
+      base_url: <%= ENV["ANTHROPIC_BASE_URL"] %>
+    openai:
+      api_key: <%= ENV["OPENAI_API_KEY"] %>
+      model: <%= ENV["OPENAI_MODEL"] %>
+      base_url: <%= ENV["OPENAI_BASE_URL"] %>
