@@ -46,6 +46,44 @@ docker exec privacy-genie-web bin/rails documents:sync TYPE=act
 - 현행본과 미시행본의 같은 조각이 글자까지 같으면(예: 제75조) 미시행본을 빼고, 현행본에 `pending_amendment_date`를 붙입니다.
   같은 조번호에 미시행 개정본이 있는 현행 조문에는 모두 이 날짜가 붙습니다.
 
+### 검색 평가
+
+`config/evaluation/retrieval_eval_v1.json`(30문항: 일반 23, 과태료 7)으로 실제 검색 품질을 잽니다.
+AI 답변을 붙이기 전에 검색이 맞는 조문을 찾는지 보는 기준선이고, 청킹·검색 규칙을 바꿀 때마다 다시 돌려 비교합니다.
+
+```bash
+docker exec privacy-genie-web bin/rails search:evaluate
+docker exec privacy-genie-web bin/rails search:evaluate OUTPUT=tmp/search_eval.json   # 결과 JSON 저장
+docker exec privacy-genie-web bin/rails search:evaluate MIN_RECALL=0.9                # 기준 미달이면 실패
+```
+
+- 적중 판정: 검색된 청크의 문서 종류·조번호가 정답 조문과 같으면 적중입니다(조각·occurrence 무시).
+  정답이 여러 조문이면 하나만 맞아도 적중입니다.
+- 지표: Recall@5(상위 5개 안에 정답이 있는 비율), MRR(정답 순위의 역수 평균, 적재된 청크 전체 순위 기준).
+- 현행 적중률: 현행본이 있는 문항(F1~F7, G11, G22)은 상위 5개에 현행 청크가 있어야 적중입니다.
+  G15(미시행 조문뿐)에서 "아직 시행 전"이라고 답하는지는 AI를 붙인 뒤 답변 평가에서 봅니다.
+- 30문항이라 한 문항이 Recall@5로 3.3%p입니다. 1~2문항 차이는 잡음으로 봅니다.
+- 실제 doc 서비스와 적재된 DB가 필요해서 CI에서는 돌리지 않습니다. 평가 로직 자체는 `test/services/documents/`의
+  테스트가 검증합니다.
+
+기준선(2026-11-02, KURE-v1, 법률 156·시행령 168청크):
+
+| 지표 | 값 |
+|---|---|
+| 전체 Recall@5 / MRR | 0.967 / 0.873 |
+| 일반 Recall@5 / MRR | 1.000 / 0.877 |
+| 과태료 Recall@5 / MRR | 0.857 / 0.861 |
+| 현행 적중률@5 | 0.889 |
+
+놓친 문항은 F2("유출을 신고하지 않으면 어떤 제재") 하나로, 정답 법 제75조가 33위입니다. 상위에는 신고 의무 조문
+(시행령 제40조, 법 제34조)이 나옵니다.
+
+### 질문 확인 화면 (개발용)
+
+개발 서버에서 `http://localhost:3000/search`를 열면 질문을 넣어 실제 검색 결과를 볼 수 있습니다. 순위·유사도·
+조번호·조각·시행 상태(현행, 미시행 시행일, 개정 예정일)·원문을 보여 줍니다. 개발 도구라 운영 환경에는 라우트가 없습니다
+(`Rails.env.local?`일 때만). 최종 화면은 AI 답변을 붙인 뒤 따로 설계합니다.
+
 ### 테스트
 
 ```bash
