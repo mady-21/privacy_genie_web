@@ -5,10 +5,6 @@ class Document < ApplicationRecord
     dependent: :destroy,
     inverse_of: :document
 
-  has_many :document_supplements,
-    dependent: :destroy,
-    inverse_of: :document
-
   validates :source_key, :name, presence: true
   validates :source_key, uniqueness: true
   validates :document_type, inclusion: { in: DOCUMENT_TYPES }

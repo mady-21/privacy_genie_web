@@ -28,18 +28,22 @@ class DocumentTest < ActiveSupport::TestCase
     assert record.errors[:source_key].any?
   end
 
-  test "destroy removes its chunks before supplements and preserves other documents" do
+  test "stores law effective date as a date" do
+    @document.update!(law_effective_date: "2026-09-11")
+    assert_equal Date.new(2026, 9, 11), @document.reload.law_effective_date
+  end
+
+  test "destroy removes its chunks and preserves other documents" do
     other = Document.create!(source_key: "test_privacy_decree", name: "시행령", document_type: "decree")
-    supplement = @document.document_supplements.create!(source_key: "supplement-1", heading: "부칙")
-    main = @document.document_chunks.create!(position: 1, article_number: "제1조", text: "본문")
-    extra = @document.document_chunks.create!(position: 2, article_number: "제1조", text: "부칙 본문", document_supplement: supplement)
-    other_chunk = other.document_chunks.create!(position: 1, article_number: "제1조", text: "시행령 본문")
+    chunk = @document.document_chunks.create!(chunk_id: "act:제1조:1", position: 1, part_index: 1, part_count: 1,
+      article_number: "제1조", text: "본문", embedding: embedding)
+    other_chunk = other.document_chunks.create!(chunk_id: "decree:제1조:1", position: 1, part_index: 1, part_count: 1,
+      article_number: "제1조", text: "시행령 본문", embedding: embedding)
 
     @document.destroy!
 
     assert_not Document.exists?(@document.id)
-    assert_not DocumentSupplement.exists?(supplement.id)
-    assert_not DocumentChunk.where(id: [ main.id, extra.id ]).exists?
+    assert_not DocumentChunk.exists?(chunk.id)
     assert Document.exists?(other.id)
     assert DocumentChunk.exists?(other_chunk.id)
   end

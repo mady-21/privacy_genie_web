@@ -10,46 +10,42 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_09_042000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_02_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "vector"
 
   create_table "document_chunks", force: :cascade do |t|
+    t.date "article_effective_date"
     t.string "article_number", null: false
     t.string "article_title"
     t.string "chapter"
+    t.string "chunk_id", null: false
     t.datetime "created_at", null: false
     t.bigint "document_id", null: false
-    t.bigint "document_supplement_id"
+    t.vector "embedding", limit: 1024, null: false
+    t.boolean "is_effective", default: true, null: false
     t.jsonb "metadata", default: {}, null: false
+    t.integer "part_count", null: false
+    t.integer "part_index", null: false
     t.integer "position", null: false
     t.string "section"
     t.text "text", null: false
     t.datetime "updated_at", null: false
-    t.index ["document_id", "position"], name: "index_document_chunks_on_document_id_and_position", unique: true
+    t.index ["chunk_id"], name: "index_document_chunks_on_chunk_id", unique: true
     t.index ["document_id"], name: "index_document_chunks_on_document_id"
-    t.index ["document_supplement_id"], name: "index_document_chunks_on_document_supplement_id"
     t.check_constraint "\"position\" > 0", name: "document_chunks_position_check"
+    t.check_constraint "is_effective OR article_effective_date IS NOT NULL", name: "document_chunks_pending_date_check"
     t.check_constraint "length(btrim(text)) > 0", name: "document_chunks_text_check"
-  end
-
-  create_table "document_supplements", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.bigint "document_id", null: false
-    t.text "heading", null: false
-    t.string "law_number"
-    t.jsonb "preamble", default: [], null: false
-    t.date "promulgation_date"
-    t.string "source_key", null: false
-    t.datetime "updated_at", null: false
-    t.index ["document_id", "source_key"], name: "index_document_supplements_on_document_id_and_source_key", unique: true
-    t.index ["document_id"], name: "index_document_supplements_on_document_id"
+    t.check_constraint "part_index >= 1 AND part_index <= part_count", name: "document_chunks_part_check"
+    t.unique_constraint ["document_id", "position"], deferrable: :immediate, name: "document_chunks_position_unique"
   end
 
   create_table "documents", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "document_type", null: false
-    t.string "law_effective_date"
+    t.string "embedding_model"
+    t.date "law_effective_date"
     t.string "law_number"
     t.string "name", null: false
     t.string "source_key", null: false
@@ -58,7 +54,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_042000) do
     t.check_constraint "document_type::text = ANY (ARRAY['act'::character varying, 'decree'::character varying, 'guide'::character varying]::text[])", name: "documents_type_check"
   end
 
-  add_foreign_key "document_chunks", "document_supplements"
   add_foreign_key "document_chunks", "documents"
-  add_foreign_key "document_supplements", "documents"
 end
