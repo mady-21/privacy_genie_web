@@ -10,7 +10,8 @@ RUN apt-get update -qq && \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-COPY Gemfile ./
+# 실행 중에는 레포가 /app에 마운트되므로, 이미지의 gem도 Gemfile.lock과 같은 버전이어야 한다.
+COPY Gemfile Gemfile.lock ./
 
 RUN bundle install
 
