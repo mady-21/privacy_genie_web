@@ -1,0 +1,45 @@
+<% content_for :title, "검색 확인" %>
+
+<main class="search-check">
+  <h1>검색 확인 <small>개발용</small></h1>
+  <p class="search-note">
+    질문을 넣으면 실제 검색(doc 질문 임베딩 → pgvector)으로 가까운 조문을 보여 줍니다. AI 답변은 아직 붙지 않았습니다.
+  </p>
+
+  <%= form_with url: search_path, method: :get, class: "search-form" do |form| %>
+    <%= form.label :q, "질문" %>
+    <%= form.text_area :q, value: @question, rows: 3, required: true,
+      placeholder: "예: 탈퇴한 회원의 정보는 언제 지워야 하나요?" %>
+    <div class="search-options">
+      <%= form.label :limit, "결과 수" %>
+      <%= form.number_field :limit, value: @limit, in: SearchesController::LIMITS %>
+      <%= form.check_box :effective_only, { checked: @effective_only }, "1", nil %>
+      <%= form.label :effective_only, "현행 조문만" %>
+      <%= form.submit "검색", name: nil %>
+    </div>
+  <% end %>
+
+  <% if @error %>
+    <p class="search-error" role="alert"><%= @error %></p>
+  <% elsif @results&.empty? %>
+    <p class="search-empty">결과가 없습니다. 문서를 동기화했는지 확인하세요(documents:sync).</p>
+  <% elsif @results %>
+    <ol class="search-results">
+      <% @results.each do |result| %>
+        <% chunk = result.chunk %>
+        <li class="search-result" id="<%= dom_id(chunk) %>">
+          <h2>
+            <%= document_label(chunk.document) %> <%= chunk.article_number %><%= "(#{chunk.article_title})" if chunk.article_title %>
+            <% if chunk.part_count > 1 %><small>조각 <%= chunk.part_index %>/<%= chunk.part_count %></small><% end %>
+          </h2>
+          <p class="search-meta">
+            유사도 <%= format("%.3f", result.similarity) %>
+            · <span class="search-status search-status-<%= result.status %>"><%= search_status_label(result) %></span>
+            <% if chunk.chapter %>· <%= chunk.chapter %><% end %>
+          </p>
+          <pre class="search-text"><%= chunk.text %></pre>
+        </li>
+      <% end %>
+    </ol>
+  <% end %>
+</main>
