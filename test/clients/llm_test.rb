@@ -16,16 +16,30 @@ class LlmTest < ActiveSupport::TestCase
     assert_equal "claude-model", provider.model
   end
 
-  test "provider builds a named provider" do
-    provider = Llm.provider("openai", config: CONFIG)
+  test "provider builds the provider named by a flag" do
+    provider = Llm.provider(:openai, config: CONFIG)
 
     assert_instance_of Llm::OpenAI, provider
     assert_equal "gpt-model", provider.model
+    assert_equal :openai, provider.provider_name
   end
 
-  test "unknown provider raises configuration error" do
-    error = assert_raises(Llm::ConfigurationError) { Llm.provider("gemini", config: CONFIG) }
+  test "provider accepts the flag as a string from env or form values" do
+    assert_instance_of Llm::OpenAI, Llm.provider("openai", config: CONFIG)
+  end
+
+  test "blank flag falls back to the default provider" do
+    assert_instance_of Llm::Anthropic, Llm.provider("", config: CONFIG)
+  end
+
+  test "provider_names lists every flag" do
+    assert_equal %i[anthropic openai], Llm.provider_names
+  end
+
+  test "unknown provider raises configuration error listing valid flags" do
+    error = assert_raises(Llm::ConfigurationError) { Llm.provider(:gemini, config: CONFIG) }
     assert_includes error.message, "gemini"
+    assert_includes error.message, "anthropic, openai"
   end
 
   test "missing api key names the env variable to set" do
@@ -38,8 +52,8 @@ class LlmTest < ActiveSupport::TestCase
   test "config file loads with every registered provider" do
     config = Rails.application.config_for(:llm)
 
-    assert_includes Llm::PROVIDERS.keys, config[:default_provider]
-    assert_equal Llm::PROVIDERS.keys.sort, config[:providers].keys.map(&:to_s).sort
+    assert_includes Llm.provider_names, config[:default_provider].to_sym
+    assert_equal Llm.provider_names.sort, config[:providers].keys.sort
   end
 
   test "message accepts only user and assistant roles with content" do

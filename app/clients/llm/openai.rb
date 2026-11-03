@@ -8,7 +8,7 @@ module Llm
       "content_filter" => :refusal
     }.freeze
 
-    def provider_name = "openai"
+    def provider_name = :openai
 
     private
 

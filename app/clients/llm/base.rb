@@ -31,6 +31,7 @@ module Llm
       parse(body).with(provider: provider_name, latency_ms: latency_ms)
     end
 
+    # Llm::PROVIDERS의 키와 같은 플래그(:anthropic 등). Response#provider에도 그대로 들어간다.
     def provider_name = raise(NotImplementedError)
 
     private

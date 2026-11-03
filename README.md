@@ -89,12 +89,21 @@ docker exec privacy-genie-web bin/rails search:evaluate MIN_RECALL=0.9          
 Claude, GPT 등을 같은 인터페이스로 부릅니다. provider별 차이(요청 형식, 시스템 프롬프트 위치, 종료 사유 이름,
 에러 형식)는 `app/clients/llm/`의 어댑터 안에만 둡니다.
 
+provider는 플래그(심볼)로 고릅니다. 플래그를 생략하면 `LLM_PROVIDER` 기본값을 씁니다.
+
 ```ruby
-response = Llm.provider.generate(          # 이름을 넘기면 다른 provider: Llm.provider("openai")
+Llm.provider_names                  # => [:anthropic, :openai]
+Llm.provider                        # 기본 provider
+Llm.provider(:anthropic)            # Claude
+Llm.provider(:openai)               # GPT
+Llm.provider(params[:provider])     # 문자열("openai")도 받습니다. 비어 있으면 기본값, 모르는 값이면 ConfigurationError
+
+response = Llm.provider(:openai).generate(
   messages: [ Llm::Message.user("질문") ],
   system: "법령에 근거해 답하세요",
   max_tokens: 1024
 )
+response.provider       # :openai (고를 때와 같은 플래그)
 response.text           # 답변
 response.stop_reason    # :end_turn, :max_tokens, :refusal, :other
 response.input_tokens   # 토큰·지연시간(latency_ms)으로 provider를 비교할 수 있습니다

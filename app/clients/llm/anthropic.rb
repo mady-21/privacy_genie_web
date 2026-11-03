@@ -9,7 +9,7 @@ module Llm
       "refusal" => :refusal
     }.freeze
 
-    def provider_name = "anthropic"
+    def provider_name = :anthropic
 
     private
 
