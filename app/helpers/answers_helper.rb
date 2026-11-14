@@ -10,22 +10,32 @@ module AnswersHelper
     safe_join(blocks.map { |block| answer_block(block) })
   end
 
-  def citation_badge_class(citation)
-    return "badge badge-pending" if citation.pending?
-    return "badge badge-amended" if citation.amended?
-
-    "badge badge-effective"
+  # 현행(초록), 개정 예정·시행 전(노랑) 배지
+  def citation_badge(citation)
+    kind, hook =
+      if citation.pending? then [ :warning, "badge-pending" ]
+      elsif citation.amended? then [ :warning, "badge-amended" ]
+      else [ :success, "badge-effective" ]
+      end
+    badge_tag(citation.status_label, kind, hook: hook)
   end
 
   # 안내 문구 안의 "[n]" 링크
   def citation_link(citation)
-    link_to("[#{citation.number}]", "#citation-#{citation.number}", class: "cite", data: CITATION_LINK_DATA)
+    link_to("[#{citation.number}]", "#citation-#{citation.number}", class: UiHelper::CITE, data: CITATION_LINK_DATA)
   end
 
   PROGRESS_STEPS = [
     [ "searching", "관련 조문을 찾고 있습니다" ],
     [ "generating", "조문을 근거로 답변을 쓰고 있습니다" ]
   ].freeze
+
+  # 진행 단계 상태별 [글자, 점] 클래스
+  PROGRESS_STATE_CLASSES = {
+    "done" => [ "text-stone-600 dark:text-stone-400", "border-blue-600 bg-blue-600 dark:border-blue-400 dark:bg-blue-400" ],
+    "current" => [ "font-semibold", "border-blue-600 motion-safe:animate-pulse dark:border-blue-400" ],
+    "todo" => [ "text-stone-500 dark:text-stone-500", "border-stone-300 dark:border-stone-600" ]
+  }.freeze
 
   # 진행 단계 목록의 각 항목 상태: done, current, todo
   def progress_steps(answer)
@@ -43,9 +53,9 @@ module AnswersHelper
     groups = block.lines.map(&:strip).reject(&:empty?).chunk_while { |a, b| a.match?(LIST_ITEM) == b.match?(LIST_ITEM) }
     safe_join(groups.map do |lines|
       if lines.first.match?(LIST_ITEM)
-        tag.ul { safe_join(lines.map { |line| tag.li(with_citation_links(line.sub(LIST_ITEM, ""))) }) }
+        tag.ul(class: "mb-3 list-disc space-y-1 pl-5") { safe_join(lines.map { |line| tag.li(with_citation_links(line.sub(LIST_ITEM, ""))) }) }
       else
-        tag.p(safe_join(lines.map { |line| with_citation_links(line) }, tag.br))
+        tag.p(safe_join(lines.map { |line| with_citation_links(line) }, tag.br), class: "mb-3")
       end
     end)
   end
@@ -54,7 +64,7 @@ module AnswersHelper
     parts = line.split(/(\[\d+\])/)
     safe_join(parts.map do |part|
       if (number = part[/\A\[(\d+)\]\z/, 1])
-        link_to(number, "#citation-#{number}", class: "cite", aria: { label: "근거 조문 #{number}" }, data: CITATION_LINK_DATA)
+        link_to(number, "#citation-#{number}", class: UiHelper::CITE, aria: { label: "근거 조문 #{number}" }, data: CITATION_LINK_DATA)
       else
         part
       end

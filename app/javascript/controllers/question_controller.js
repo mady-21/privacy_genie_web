@@ -12,6 +12,7 @@ const PERSONAL_INFO_PATTERNS = [
 export default class extends Controller {
   static targets = ["input", "count", "warning"]
   static values = { max: Number }
+  static classes = ["overLimit"]
 
   connect() {
     this.update()
@@ -20,7 +21,8 @@ export default class extends Controller {
   update() {
     const text = this.inputTarget.value
     this.countTarget.textContent = text.length.toLocaleString("ko-KR")
-    this.countTarget.classList.toggle("over-limit", this.hasMaxValue && text.length > this.maxValue)
+    const overLimit = this.hasMaxValue && text.length > this.maxValue
+    this.overLimitClasses.forEach((name) => this.countTarget.classList.toggle(name, overLimit))
     this.warningTarget.hidden = !PERSONAL_INFO_PATTERNS.some((pattern) => pattern.test(text))
   }
 

@@ -3,31 +3,33 @@
   <%= turbo_refreshes_with method: :morph, scroll: :preserve %>
 <% end %>
 
-<main class="page">
+<main class="mx-auto max-w-6xl px-4 pt-4">
   <% if @answer.in_progress? %>
     <%# Job이 상태를 바꿀 때마다 refresh를 받는다. 구독 전에 끝나 버린 경우를 위해 주기적으로도 다시 그린다. %>
     <%= turbo_stream_from @answer %>
     <div hidden data-controller="refresh" data-refresh-interval-value="5000"></div>
   <% end %>
 
-  <section class="question card" aria-label="질문">
-    <p class="eyebrow">질문</p>
-    <p class="question-text"><%= @answer.question %></p>
+  <section class="question <%= UiHelper::CARD %> mb-4 p-4 sm:px-5" aria-label="질문">
+    <p class="<%= UiHelper::EYEBROW %>">질문</p>
+    <p class="question-text font-semibold whitespace-pre-wrap"><%= @answer.question %></p>
     <% if @answer.masked_kinds.any? %>
-      <p class="hint">개인정보로 보이는 부분(<%= @answer.masked_kinds.join(", ") %>)을 가리고 처리했습니다.</p>
+      <p class="<%= UiHelper::HINT %> mt-1.5">개인정보로 보이는 부분(<%= @answer.masked_kinds.join(", ") %>)을 가리고 처리했습니다.</p>
     <% end %>
   </section>
 
-  <div class="answer-layout">
-    <section id="answer" class="answer card" aria-labelledby="answer-heading" tabindex="-1">
-      <h2 id="answer-heading" class="eyebrow">답변</h2>
+  <div class="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+    <section id="answer" class="answer <%= UiHelper::CARD %> scroll-mt-4 p-4 focus:outline-none sm:px-5"
+      aria-labelledby="answer-heading" tabindex="-1">
+      <h2 id="answer-heading" class="<%= UiHelper::EYEBROW %>">답변</h2>
       <div aria-live="polite">
         <%= render "status", answer: @answer %>
       </div>
     </section>
 
     <% if @answer.citations.any? %>
-      <aside class="citations" aria-label="근거 조문">
+      <aside class="citations flex min-w-0 flex-col gap-2.5 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:pr-0.5"
+        aria-label="근거 조문">
         <%= render "citations", answer: @answer %>
       </aside>
     <% end %>
@@ -37,5 +39,5 @@
     <%= render "dev_meta", answer: @answer %>
   <% end %>
 
-  <p class="page-actions"><%= link_to "새 질문하기", root_path, class: "button" %></p>
+  <p class="mt-6"><%= link_to "새 질문하기", root_path, class: UiHelper::BUTTON_SECONDARY %></p>
 </main>

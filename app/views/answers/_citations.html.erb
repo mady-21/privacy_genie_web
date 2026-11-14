@@ -9,7 +9,7 @@
 <% end %>
 
 <% if primary.any? %>
-  <h2 class="eyebrow"><%= cited.any? ? "근거 조문" : "검색된 조문" %></h2>
+  <h2 class="<%= UiHelper::EYEBROW %> mb-0"><%= cited.any? ? "근거 조문" : "검색된 조문" %></h2>
   <% primary.each do |citation| %>
     <%= render "citation", citation: citation, back_link: citation.cited %>
   <% end %>
@@ -17,9 +17,11 @@
 
 <% if rest.any? %>
   <details class="related">
-    <summary><%= rest_label %> <%= rest.size %>개</summary>
-    <% rest.each do |citation| %>
-      <%= render "citation", citation: citation, back_link: false %>
-    <% end %>
+    <summary class="cursor-pointer py-1 text-sm text-stone-600 dark:text-stone-400"><%= rest_label %> <%= rest.size %>개</summary>
+    <div class="mt-2 flex flex-col gap-2.5">
+      <% rest.each do |citation| %>
+        <%= render "citation", citation: citation, back_link: false %>
+      <% end %>
+    </div>
   </details>
 <% end %>

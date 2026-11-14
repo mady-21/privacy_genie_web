@@ -106,6 +106,20 @@ docker exec privacy-genie-web bin/rails search:evaluate MIN_RECALL=0.9          
 - **남용 방지**: 로그인이 없으므로 IP당 1분에 5번(`rate_limit`)과 하루 전체 질문 수 `ANSWER_DAILY_LIMIT`(기본 500)로 막습니다.
 - **개발 환경에서만**: 질문 폼의 provider 선택, 답변 아래의 호출 정보(모델·토큰·지연·지운 인용·에러 메시지).
 
+### 화면 스타일 (Tailwind CSS)
+
+스타일은 [tailwindcss-rails](https://github.com/rails/tailwindcss-rails)(Tailwind v4, Node 불필요)로 씁니다.
+클래스는 뷰에 바로 쓰고, 카드·버튼·안내·배지·인용 표시처럼 되풀이되는 묶음은 `app/helpers/ui_helper.rb`에 모았습니다.
+전역 설정(글꼴 등)만 `app/assets/tailwind/application.css`에 두고, 빌드 결과 `app/assets/builds/tailwind.css`는 커밋하지 않습니다.
+다크 모드는 `dark:` 변형(OS 설정)을 따릅니다. `notice-warning`, `badge-pending` 같은 클래스는 테스트용 hook이라 스타일이 없습니다.
+
+개발 컨테이너는 `bin/dev`(foreman)로 Rails 서버와 CSS watch(`Procfile.dev`)를 함께 띄웁니다. gem과 CMD가 바뀌었으므로
+이 변경을 받은 뒤 한 번 이미지를 다시 빌드합니다.
+
+```bash
+docker compose build web && docker compose up -d --force-recreate web
+```
+
 ### LLM 호출
 
 Claude, GPT 등을 같은 인터페이스로 부릅니다. provider별 차이(요청 형식, 시스템 프롬프트 위치, 종료 사유 이름,

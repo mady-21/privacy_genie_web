@@ -1,45 +1,50 @@
 <% content_for :title, "검색 확인" %>
 
-<main class="search-check">
-  <h1>검색 확인 <small>개발용</small></h1>
-  <p class="search-note">
-    질문을 넣으면 실제 검색(doc 질문 임베딩 → pgvector)으로 가까운 조문을 보여 줍니다. AI 답변은 아직 붙지 않았습니다.
-  </p>
+<main class="search-check mx-auto max-w-6xl px-4 pt-4">
+  <div class="max-w-4xl">
+    <h1 class="mt-2 mb-1 text-2xl/snug font-bold">검색 확인 <small class="text-sm font-normal text-stone-500">개발용</small></h1>
+    <p class="mb-4 text-stone-600 dark:text-stone-400">
+      질문을 넣으면 실제 검색(doc 질문 임베딩 → pgvector)으로 가까운 조문을 보여 줍니다. AI 답변은 <%= link_to "질의응답 화면", root_path, class: "text-blue-700 underline dark:text-blue-300" %>에서 봅니다.
+    </p>
 
-  <%= form_with url: search_path, method: :get, class: "search-form" do |form| %>
-    <%= form.label :q, "질문" %>
-    <%= form.text_area :q, value: @question, rows: 3, required: true,
-      placeholder: "예: 탈퇴한 회원의 정보는 언제 지워야 하나요?" %>
-    <div class="search-options">
-      <%= form.label :limit, "결과 수" %>
-      <%= form.number_field :limit, value: @limit, in: SearchesController::LIMITS %>
-      <%= form.check_box :effective_only, { checked: @effective_only }, "1", nil %>
-      <%= form.label :effective_only, "현행 조문만" %>
-      <%= form.submit "검색", name: nil %>
-    </div>
-  <% end %>
+    <%= form_with url: search_path, method: :get, class: "search-form #{UiHelper::CARD} p-4" do |form| %>
+      <%= form.label :q, "질문", class: "font-semibold" %>
+      <%= form.text_area :q, value: @question, rows: 3, required: true,
+        placeholder: "예: 탈퇴한 회원의 정보는 언제 지워야 하나요?",
+        class: "mt-1 mb-2 block w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base " \
+          "focus:outline-2 focus:outline-blue-600 dark:border-stone-600 dark:bg-stone-900" %>
+      <div class="flex flex-wrap items-center gap-2">
+        <%= form.label :limit, "결과 수" %>
+        <%= form.number_field :limit, value: @limit, in: SearchesController::LIMITS,
+          class: "w-16 rounded-lg border border-stone-300 bg-white px-2 py-1 dark:border-stone-600 dark:bg-stone-900" %>
+        <%= form.check_box :effective_only, { checked: @effective_only, class: "size-4" }, "1", nil %>
+        <%= form.label :effective_only, "현행 조문만" %>
+        <%= form.submit "검색", name: nil, class: UiHelper::BUTTON_PRIMARY %>
+      </div>
+    <% end %>
 
-  <% if @error %>
-    <p class="search-error" role="alert"><%= @error %></p>
-  <% elsif @results&.empty? %>
-    <p class="search-empty">결과가 없습니다. 문서를 동기화했는지 확인하세요(documents:sync).</p>
-  <% elsif @results %>
-    <ol class="search-results">
-      <% @results.each do |result| %>
-        <% chunk = result.chunk %>
-        <li class="search-result" id="<%= dom_id(chunk) %>">
-          <h2>
-            <%= document_label(chunk.document) %> <%= chunk.article_number %><%= "(#{chunk.article_title})" if chunk.article_title %>
-            <% if chunk.part_count > 1 %><small>조각 <%= chunk.part_index %>/<%= chunk.part_count %></small><% end %>
-          </h2>
-          <p class="search-meta">
-            유사도 <%= format("%.3f", result.similarity) %>
-            · <span class="search-status search-status-<%= result.status %>"><%= search_status_label(result) %></span>
-            <% if chunk.chapter %>· <%= chunk.chapter %><% end %>
-          </p>
-          <pre class="search-text"><%= chunk.text %></pre>
-        </li>
-      <% end %>
-    </ol>
-  <% end %>
+    <% if @error %>
+      <%= notice_tag :danger, class: "search-error mt-4", role: "alert" do %><p><%= @error %></p><% end %>
+    <% elsif @results&.empty? %>
+      <p class="search-empty mt-4 text-stone-600 dark:text-stone-400">결과가 없습니다. 문서를 동기화했는지 확인하세요(documents:sync).</p>
+    <% elsif @results %>
+      <ol class="search-results mt-4 list-decimal space-y-4 pl-6">
+        <% @results.each do |result| %>
+          <% chunk = result.chunk %>
+          <li class="search-result" id="<%= dom_id(chunk) %>">
+            <h2 class="font-semibold">
+              <%= document_label(chunk.document) %> <%= chunk.article_number %><%= "(#{chunk.article_title})" if chunk.article_title %>
+              <% if chunk.part_count > 1 %><small class="text-sm font-normal text-stone-500">조각 <%= chunk.part_index %>/<%= chunk.part_count %></small><% end %>
+            </h2>
+            <p class="search-meta text-sm text-stone-600 dark:text-stone-400">
+              유사도 <%= format("%.3f", result.similarity) %>
+              · <span class="search-status search-status-<%= result.status %> <%= "font-semibold text-amber-700 dark:text-amber-300" if result.status == :pending %>"><%= search_status_label(result) %></span>
+              <% if chunk.chapter %>· <%= chunk.chapter %><% end %>
+            </p>
+            <pre class="search-text mt-1 rounded-lg bg-stone-100 p-2 font-sans text-sm whitespace-pre-wrap dark:bg-stone-800/60"><%= chunk.text %></pre>
+          </li>
+        <% end %>
+      </ol>
+    <% end %>
+  </div>
 </main>

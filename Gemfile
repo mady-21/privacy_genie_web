@@ -16,6 +16,8 @@ gem "importmap-rails"
 gem "turbo-rails"
 # Hotwire's modest JavaScript framework [https://stimulus.hotwired.dev]
 gem "stimulus-rails"
+# Tailwind CSS 빌드(standalone 바이너리라 Node가 필요 없다) [https://github.com/rails/tailwindcss-rails]
+gem "tailwindcss-rails", "~> 4.7"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
 

@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: privacy-genie-web
+    # Rails 서버와 Tailwind CSS watch(Procfile.dev)를 함께 띄운다.
+    command: bin/dev
     ports:
       - "3000:3000"
     env_file:

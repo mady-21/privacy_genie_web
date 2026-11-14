@@ -1,8 +1,10 @@
 <% content_for :title, "보관 기간 만료" %>
 
-<main class="page page-narrow">
-  <div class="notice">
-    <p>보관 기간(<%= Answer::RETENTION.in_days.to_i %>일)이 지나 질문과 답변을 지웠습니다.</p>
+<main class="mx-auto max-w-6xl px-4 pt-4">
+  <div class="max-w-3xl">
+    <%= notice_tag do %>
+      <p>보관 기간(<%= Answer::RETENTION.in_days.to_i %>일)이 지나 질문과 답변을 지웠습니다.</p>
+    <% end %>
+    <p class="mt-6"><%= link_to "새 질문하기", root_path, class: UiHelper::BUTTON_SECONDARY %></p>
   </div>
-  <p class="page-actions"><%= link_to "새 질문하기", root_path, class: "button" %></p>
 </main>

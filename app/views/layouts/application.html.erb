@@ -19,26 +19,26 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%# Tailwind 빌드 결과(app/assets/builds/tailwind.css)를 넣는다. 원본은 app/assets/tailwind/application.css %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
-    <header class="site-header">
-      <div class="site-header-inner">
-        <%= link_to "Privacy Genie", root_path, class: "site-name" %>
-        <span class="site-tagline">개인정보 보호법·시행령 근거 답변</span>
+  <body class="min-h-screen bg-stone-50 font-sans leading-7 break-keep wrap-anywhere text-stone-900 dark:bg-stone-950 dark:text-stone-100">
+    <header class="border-b border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3">
+        <%= link_to "Privacy Genie", root_path, class: "text-lg font-bold text-stone-900 no-underline dark:text-stone-100" %>
+        <span class="text-sm text-stone-600 dark:text-stone-400">개인정보 보호법·시행령 근거 답변</span>
       </div>
     </header>
 
-    <p class="site-notice">
+    <p class="site-notice mx-auto mt-3 max-w-6xl px-4 text-sm text-stone-600 dark:text-stone-400">
       법률 자문이 아닌 일반 정보입니다. 이름·연락처·주민등록번호 같은 개인정보는 질문에 넣지 마세요.
     </p>
 
     <%= yield %>
 
-    <footer class="site-footer">
+    <footer class="mx-auto mt-12 mb-8 max-w-6xl px-4 text-[13px] text-stone-500 dark:text-stone-400">
       답변은 AI가 법령 조문을 근거로 만든 참고 정보이며 틀릴 수 있습니다. 중요한 결정은 원문 조문과 전문가 상담으로 확인하세요.
     </footer>
   </body>

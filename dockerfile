@@ -15,6 +15,9 @@ COPY Gemfile Gemfile.lock ./
 
 RUN bundle install
 
+# 개발 서버는 bin/dev(foreman)로 Rails와 Tailwind watch를 함께 띄운다.
+RUN gem install foreman
+
 COPY . .
 
 EXPOSE 3000

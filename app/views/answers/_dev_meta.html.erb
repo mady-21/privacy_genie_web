@@ -1,5 +1,5 @@
 <%# 개발 환경에서만 보이는 호출 정보. provider 비교와 디버깅용이다. %>
-<dl class="dev-meta">
+<dl class="dev-meta mt-4 grid grid-cols-[max-content_1fr] gap-x-3 gap-y-0.5 rounded-lg border border-dashed border-stone-300 px-3.5 py-2.5 text-[13px] text-stone-500 dark:border-stone-600 dark:text-stone-400 [&_dt]:font-semibold">
   <dt>상태</dt><dd><%= answer.status %><%= " / #{answer.outcome}" if answer.outcome %><%= " / #{answer.error_kind}" if answer.error_kind %></dd>
   <% if answer.model %>
     <dt>LLM</dt>
