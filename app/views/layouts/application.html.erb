@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
   <head>
-    <title><%= content_for(:title) || "App" %></title>
+    <title><%= [ content_for(:title), "Privacy Genie" ].compact.join(" · ") %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="App">
+    <meta name="application-name" content="Privacy Genie">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="color-scheme" content="light dark">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
@@ -24,6 +25,21 @@
   </head>
 
   <body>
+    <header class="site-header">
+      <div class="site-header-inner">
+        <%= link_to "Privacy Genie", root_path, class: "site-name" %>
+        <span class="site-tagline">개인정보 보호법·시행령 근거 답변</span>
+      </div>
+    </header>
+
+    <p class="site-notice">
+      법률 자문이 아닌 일반 정보입니다. 이름·연락처·주민등록번호 같은 개인정보는 질문에 넣지 마세요.
+    </p>
+
     <%= yield %>
+
+    <footer class="site-footer">
+      답변은 AI가 법령 조문을 근거로 만든 참고 정보이며 틀릴 수 있습니다. 중요한 결정은 원문 조문과 전문가 상담으로 확인하세요.
+    </footer>
   </body>
 </html>

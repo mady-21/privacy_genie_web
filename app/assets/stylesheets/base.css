@@ -1,0 +1,180 @@
+/* 공용 디자인 토큰과 레이아웃. 색은 여기 변수로만 쓰고, 다크 모드는 변수만 바꾼다. */
+:root {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --text: #1f1f1d;
+  --text-secondary: #5c5b57;
+  --text-muted: #85847f;
+  --border: #e2e1dc;
+  --border-strong: #c9c8c2;
+  --accent: #1f5fa8;
+  --accent-bg: #e7f0fb;
+  --accent-text: #174a84;
+  --success-bg: #e8f3e0;
+  --success-text: #2f5c12;
+  --warning-bg: #fbf0dc;
+  --warning-text: #7a4a08;
+  --warning-border: #ecc98a;
+  --danger-bg: #fbeaea;
+  --danger-text: #8f2626;
+  --danger-border: #eeb4b4;
+  --highlight: #fff4c2;
+  --radius: 8px;
+  --radius-card: 12px;
+  --font: system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161615;
+    --surface: #212120;
+    --text: #ecebe7;
+    --text-secondary: #b3b2ac;
+    --text-muted: #8a8984;
+    --border: #3a3a37;
+    --border-strong: #55544f;
+    --accent: #7fb0ea;
+    --accent-bg: #1c3149;
+    --accent-text: #b6d3f5;
+    --success-bg: #22341a;
+    --success-text: #b9dc9c;
+    --warning-bg: #3a2c12;
+    --warning-text: #f0cd8c;
+    --warning-border: #6b5122;
+    --danger-bg: #3d1f1f;
+    --danger-text: #f2b4b4;
+    --danger-border: #6e3434;
+    --highlight: #4a4120;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.7;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+a { color: var(--accent); }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.site-header { border-bottom: 1px solid var(--border); background: var(--surface); }
+.site-header-inner,
+.site-notice,
+.site-footer,
+.page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+/* 글 위주 화면은 읽기 좋은 폭으로 줄이되, 헤더와 왼쪽 선은 맞춘다. */
+.page-narrow > * { max-width: 760px; }
+
+.site-header-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.site-name { color: var(--text); font-weight: 700; font-size: 1.1rem; text-decoration: none; }
+.site-tagline { color: var(--text-secondary); font-size: 0.875rem; }
+
+.site-notice {
+  margin-top: 12px;
+  margin-bottom: 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.site-footer {
+  margin-top: 48px;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.page { padding-top: 16px; }
+.page-title { margin: 8px 0 4px; font-size: 1.5rem; line-height: 1.4; }
+.page-lead { margin: 0 0 16px; color: var(--text-secondary); }
+.page-actions { margin: 24px 0 0; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 16px 20px;
+}
+
+@media (max-width: 767px) {
+  .card { padding: 14px 16px; }
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.hint { margin: 0; color: var(--text-muted); font-size: 0.8125rem; }
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.button:hover { border-color: var(--text-muted); }
+.button-primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.button-primary:hover { filter: brightness(1.08); border-color: var(--accent); }
+.button[disabled], .button[aria-busy="true"] { opacity: 0.7; cursor: progress; }
+
+.notice {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+.notice p { margin: 0; }
+.notice p + p { margin-top: 4px; }
+.notice-warning { background: var(--warning-bg); border-color: var(--warning-border); color: var(--warning-text); }
+.notice-danger { background: var(--danger-bg); border-color: var(--danger-border); color: var(--danger-text); }
+
+.badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.6;
+}
+.badge-effective { background: var(--success-bg); color: var(--success-text); }
+.badge-amended, .badge-pending { background: var(--warning-bg); color: var(--warning-text); }

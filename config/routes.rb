@@ -12,6 +12,9 @@ Rails.application.routes.draw do
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
-  # Defines the root path route ("/")
-  # root "posts#index"
+  # 사용자용 질의응답 화면. 답변 URL은 추측할 수 없는 토큰을 쓴다.
+  root "answers#new"
+  resources :answers, only: %i[new create show], param: :token do
+    post :retry, on: :member
+  end
 end

@@ -1,0 +1,40 @@
+<%= form_with model: answer, url: answers_path, class: "question-form card",
+  data: { controller: "question", question_max_value: Answer::MAX_QUESTION_LENGTH } do |form| %>
+  <% messages = answer.errors[:base] + answer.errors.messages_for(:question) %>
+  <% if messages.any? %>
+    <div class="notice notice-danger" role="alert">
+      <% messages.each do |message| %><p><%= message %></p><% end %>
+    </div>
+  <% end %>
+
+  <%= form.label :question, "질문", class: "visually-hidden" %>
+  <%= form.text_area :question, rows: 4, required: true, maxlength: Answer::MAX_QUESTION_LENGTH,
+    placeholder: "탈퇴한 회원의 개인정보는 언제까지 지워야 하나요?",
+    aria: { describedby: "question-hint" },
+    data: { question_target: "input", action: "input->question#update keydown->question#submitOnShortcut" } %>
+
+  <p class="notice notice-warning" hidden data-question-target="warning" role="status">
+    개인정보(전화번호·이메일·주민등록번호 등)로 보이는 내용이 있습니다. 보내면 해당 부분을 가리고 처리하지만, 가능하면 지우고 질문해 주세요.
+  </p>
+
+  <div class="question-form-footer">
+    <p id="question-hint" class="hint">
+      <span data-question-target="count">0</span> / <%= Answer::MAX_QUESTION_LENGTH.to_fs(:delimited) %>자
+      <span class="hint-shortcut">· Ctrl+Enter로 보내기</span>
+    </p>
+    <% if Rails.env.local? %>
+      <label class="dev-provider">
+        <span>provider <small>(개발용)</small></span>
+        <%= form.select :provider, Llm.provider_names.map(&:to_s), { selected: answer.provider || Rails.application.config_for(:llm)[:default_provider] } %>
+      </label>
+    <% end %>
+    <%= form.submit "질문하기", class: "button button-primary", data: { turbo_submits_with: "보내는 중…" } %>
+  </div>
+
+  <div class="examples">
+    <span class="hint">예시</span>
+    <% AnswersController::EXAMPLES.each do |example| %>
+      <button type="button" class="chip" data-action="question#fill" data-question-text-param="<%= example %>"><%= example %></button>
+    <% end %>
+  </div>
+<% end %>

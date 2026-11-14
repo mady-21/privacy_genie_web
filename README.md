@@ -18,7 +18,9 @@ API로 데이터를 내주기만 합니다. 문서와 질문은 같은 모델(`n
 
 ```text
 [web] 사용자 질문 ──POST /embeddings──▶ [doc] 질문 벡터
-[web] pgvector로 가까운 청크 검색 → 질문 + 관련 청크 → LLM → 근거 기반 답변
+[web] 질문 개인정보 마스킹 → Answer 저장 → AnswerJob
+[web] pgvector로 가까운 청크 검색 → 조문에 [1][2] 번호를 붙여 LLM → 인용 번호 검증 → 답변·근거 조문 스냅샷 저장
+[web] 상태가 바뀔 때마다 Turbo refresh로 답변 화면 갱신
 ```
 
 ### 문서 동기화
@@ -82,7 +84,27 @@ docker exec privacy-genie-web bin/rails search:evaluate MIN_RECALL=0.9          
 
 개발 서버에서 `http://localhost:3000/search`를 열면 질문을 넣어 실제 검색 결과를 볼 수 있습니다. 순위·유사도·
 조번호·조각·시행 상태(현행, 미시행 시행일, 개정 예정일)·원문을 보여 줍니다. 개발 도구라 운영 환경에는 라우트가 없습니다
-(`Rails.env.local?`일 때만). 최종 화면은 AI 답변을 붙인 뒤 따로 설계합니다.
+(`Rails.env.local?`일 때만).
+
+### 질의응답 화면
+
+`/`에서 질문을 받아 `/answers/:token`에서 답변과 근거 조문을 보여 줍니다. 답변 URL은 추측할 수 없는 토큰입니다.
+
+- **처리**: `AnswersController#create`가 `Answer`를 만들고 `AnswerJob`에 넘깁니다. Job은 `Answers::Generate`
+  (검색 → 프롬프트 → LLM → 인용 검증)를 부르고, 상태(pending → searching → generating → completed/failed)가
+  바뀔 때마다 Turbo refresh를 보냅니다. 토큰 스트리밍은 아직 없습니다.
+- **근거 없음**: 가장 가까운 조문의 유사도가 `Answers::Generate::MIN_SIMILARITY`(0.43)보다 낮으면 LLM을 부르지 않습니다.
+  LLM이 "근거 없음"이라고 답해도 같은 상태가 됩니다.
+- **인용**: 본문의 `[n]`은 근거 조문 카드로 연결됩니다. 목록에 없는 번호는 지우고 `dropped_citation_numbers`에 남깁니다.
+  근거 조문은 청크 FK가 아니라 텍스트 스냅샷(`answer_citations`)이라 `documents:sync` 뒤에도 그대로입니다.
+- **에러**: LLM 과부하·한도(`RateLimitError`, `ServiceUnavailableError`)는 Job이 두 번 더 시도한 뒤 "다시 시도" 버튼을
+  보여 줍니다. 설정·요청 오류, doc 장애, 벡터 불일치는 재시도 없이 점검 안내를 보여 줍니다.
+- **개인정보**: 질문의 이메일·주민등록번호·카드번호·전화번호·계좌번호는 doc·LLM에 보내기 전과 저장 전에
+  `Answers::Masking`이 `[전화번호]`처럼 가립니다. 이름·주소는 잡지 못하므로 화면에서 넣지 말라고 안내합니다.
+  `Answer::RETENTION`(90일)이 지나면 `PurgeExpiredAnswersJob`(매일 04시, `config/recurring.yml`)이 질문·답변·근거 조문을
+  지우고 토큰 수 같은 통계만 남깁니다.
+- **남용 방지**: 로그인이 없으므로 IP당 1분에 5번(`rate_limit`)과 하루 전체 질문 수 `ANSWER_DAILY_LIMIT`(기본 500)로 막습니다.
+- **개발 환경에서만**: 질문 폼의 provider 선택, 답변 아래의 호출 정보(모델·토큰·지연·지운 인용·에러 메시지).
 
 ### LLM 호출
 

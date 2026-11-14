@@ -1,0 +1,18 @@
+<%# 개발 환경에서만 보이는 호출 정보. provider 비교와 디버깅용이다. %>
+<dl class="dev-meta">
+  <dt>상태</dt><dd><%= answer.status %><%= " / #{answer.outcome}" if answer.outcome %><%= " / #{answer.error_kind}" if answer.error_kind %></dd>
+  <% if answer.model %>
+    <dt>LLM</dt>
+    <dd>
+      <%= answer.provider %> · <%= answer.model %> · <%= answer.stop_reason %>
+      · 입력 <%= answer.input_tokens.to_i.to_fs(:delimited) %> / 출력 <%= answer.output_tokens.to_i.to_fs(:delimited) %> 토큰
+      · <%= (answer.latency_ms.to_i / 1000.0).round(1) %>초
+    </dd>
+  <% end %>
+  <% if answer.dropped_citation_numbers.any? %>
+    <dt>지운 인용</dt><dd><%= answer.dropped_citation_numbers.map { |number| "[#{number}]" }.join(" ") %></dd>
+  <% end %>
+  <% if answer.error_message %>
+    <dt>에러</dt><dd><%= answer.error_message %></dd>
+  <% end %>
+</dl>

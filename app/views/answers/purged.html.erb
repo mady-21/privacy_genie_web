@@ -1,0 +1,8 @@
+<% content_for :title, "보관 기간 만료" %>
+
+<main class="page page-narrow">
+  <div class="notice">
+    <p>보관 기간(<%= Answer::RETENTION.in_days.to_i %>일)이 지나 질문과 답변을 지웠습니다.</p>
+  </div>
+  <p class="page-actions"><%= link_to "새 질문하기", root_path, class: "button" %></p>
+</main>

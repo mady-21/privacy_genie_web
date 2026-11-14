@@ -1,0 +1,76 @@
+<% cited = answer.citations.select(&:cited) %>
+<% if answer.in_progress? %>
+  <ol class="progress" role="status">
+    <% progress_steps(answer).each do |label, state| %>
+      <li class="progress-step progress-<%= state %>"><%= label %><%= "…" if state == "current" %></li>
+    <% end %>
+  </ol>
+  <p class="hint">보통 10~20초 걸립니다. 화면은 저절로 바뀝니다.</p>
+
+<% elsif answer.failed? && answer.error_temporary? %>
+  <div class="notice notice-danger">
+    <p>AI 답변 서비스가 지금 응답하지 않습니다. 잠시 뒤 다시 시도하세요.</p>
+    <% if answer.citations.any? %><p>찾아 둔 근거 조문은 함께 볼 수 있습니다.</p><% end %>
+  </div>
+  <%= button_to "다시 시도", retry_answer_path(answer), class: "button button-primary",
+    form: { data: { turbo_submits_with: "다시 시도하는 중…" } } %>
+
+<% elsif answer.failed? %>
+  <div class="notice notice-danger">
+    <p>지금은 답변을 만들 수 없습니다. 서비스 점검 중일 수 있으니 잠시 뒤 새로 질문해 주세요.</p>
+  </div>
+
+<% elsif answer.outcome_no_basis? %>
+  <div class="notice">
+    <p>질문과 관련된 조문을 찾지 못했습니다.</p>
+  </div>
+  <ul class="tips">
+    <li>누가, 어떤 개인정보를, 무엇을 하려는지 구체적으로 적어 보세요.</li>
+    <li>수집·이용, 제3자 제공, 파기, 동의, 과태료 같은 법령 용어를 넣으면 더 잘 찾습니다.</li>
+    <li>벌칙(징역·벌금) 조문, 부칙, 고시·가이드라인은 아직 다루지 않습니다.</li>
+  </ul>
+
+<% elsif answer.outcome_refused? %>
+  <div class="notice">
+    <p>이 질문에는 답할 수 없습니다. 개인정보 보호법 조문에 관한 질문으로 바꿔 다시 물어보세요.</p>
+  </div>
+
+<% else %>
+  <% pending = cited.select(&:pending?) %>
+  <% amended = cited.select(&:amended?) %>
+  <% if pending.any? %>
+    <div class="notice notice-warning">
+      <p>
+        아직 시행되지 않은 조문을 인용했습니다:
+        <% pending.each do |citation| %><%= citation_link citation %> <%= citation.effective_date.iso8601 %> 시행<% end %>.
+        시행일 전까지는 현행 조문이 적용됩니다.
+      </p>
+    </div>
+  <% end %>
+  <% if amended.any? %>
+    <div class="notice notice-warning">
+      <p>
+        인용한 조문 중 개정이 예정된 것이 있습니다:
+        <% amended.each do |citation| %><%= citation_link citation %> <%= citation.pending_amendment_date.iso8601 %> 개정 시행<% end %>.
+      </p>
+    </div>
+  <% end %>
+  <% if cited.empty? %>
+    <div class="notice notice-warning">
+      <p>이 답변에는 조문 인용 표시가 없습니다. 함께 검색된 조문을 직접 확인하세요.</p>
+    </div>
+  <% end %>
+
+  <div class="answer-body"><%= answer_body(answer.body) %></div>
+
+  <% if answer.outcome_truncated? %>
+    <div class="notice notice-warning">
+      <p>답변이 길어 중간에 끊겼습니다. 질문을 좁혀서 다시 물어보세요.</p>
+    </div>
+  <% end %>
+
+  <p class="hint answer-basis">
+    <%= answer.completed_at.to_date.iso8601 %> 기준 법령 데이터로 답했습니다.
+    법률 자문이 아니므로 구체적 사안은 전문가나 개인정보보호위원회에 확인하세요.
+  </p>
+<% end %>

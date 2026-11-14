@@ -1,0 +1,20 @@
+<article id="citation-<%= citation.number %>" class="citation card">
+  <header class="citation-header">
+    <span class="citation-number" aria-label="근거 조문 <%= citation.number %>"><%= citation.number %></span>
+    <h3><%= citation.heading %></h3>
+  </header>
+  <p class="citation-meta">
+    <span class="<%= citation_badge_class(citation) %>"><%= citation.status_label %></span>
+    <% if citation.part_label %><span class="badge">조문 <%= citation.part_label %></span><% end %>
+  </p>
+  <details class="citation-body">
+    <summary>
+      <span class="citation-preview"><%= citation.text.squish.truncate(90) %></span>
+      <span class="summary-action"><span class="when-closed">조문 전체 보기</span><span class="when-open">접기</span></span>
+    </summary>
+    <div class="citation-text"><%= citation.text %></div>
+  </details>
+  <% if back_link %>
+    <a href="#answer" class="back-link" data-turbo="false">답변으로 돌아가기</a>
+  <% end %>
+</article>
