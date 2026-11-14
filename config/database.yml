@@ -19,13 +19,17 @@ default: &default
   # https://guides.rubyonrails.org/configuring.html#database-pooling
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
 
+# 개발·테스트 DB 접속 정보. 비밀번호는 저장소에 두지 않고 .env의 DATABASE_PASSWORD로 넣는다(.env.example 참고).
+# CI는 DATABASE_URL로 접속하므로 이 값을 쓰지 않는다.
+local: &local
+  username: <%= ENV.fetch("DATABASE_USERNAME", "privacy_genie") %>
+  password: <%= ENV["DATABASE_PASSWORD"] %>
+  host: <%= ENV.fetch("DATABASE_HOST", "privacy-db") %>
+  port: <%= ENV.fetch("DATABASE_PORT", 5432) %>
+
 development:
-  <<: *default
+  <<: [ *default, *local ]
   database: privacy_genie_development
-  username: privacy_genie
-  password: privacy_genie_dev
-  host: privacy-db
-  port: 5432
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
@@ -58,12 +62,8 @@ development:
 # re-generated from your development database when you run "rake".
 # Do not set this db to the same as development or production.
 test:
-  <<: *default
+  <<: [ *default, *local ]
   database: privacy_genie_test
-  username: privacy_genie
-  password: privacy_genie_dev
-  host: privacy-db
-  port: 5432
 
 # As with config/credentials.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is

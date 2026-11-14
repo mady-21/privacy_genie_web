@@ -7,6 +7,14 @@ class AnswersControllerTest < ActionDispatch::IntegrationTest
     AnswersController.daily_limit = ENV.fetch("ANSWER_DAILY_LIMIT", 500).to_i
   end
 
+  test "logs never keep the raw question" do
+    filter = ActiveSupport::ParameterFilter.new(Rails.application.config.filter_parameters)
+
+    filtered = filter.filter("answer" => { "question" => "010-1234-5678", "provider" => "openai" }, "q" => "질문", "limit" => "5")
+
+    assert_equal({ "answer" => { "question" => "[FILTERED]", "provider" => "openai" }, "q" => "[FILTERED]", "limit" => "5" }, filtered)
+  end
+
   test "the home page shows the question form, examples and scope" do
     get root_path
 

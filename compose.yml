@@ -6,8 +6,9 @@ services:
     container_name: privacy-genie-web
     # Rails 서버와 Tailwind CSS watch(Procfile.dev)를 함께 띄운다.
     command: bin/dev
+    # 같은 네트워크의 다른 기기에서 접속하지 못하게 이 컴퓨터(127.0.0.1)에만 연다.
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     env_file:
       - .env
     volumes:

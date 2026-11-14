@@ -161,6 +161,14 @@ response.input_tokens   # 토큰·지연시간(latency_ms)으로 provider를 비
 새 provider는 `Llm::Base`를 상속해 요청·응답 변환만 구현하고 `Llm::PROVIDERS`에 등록합니다. 테스트에
 `LlmProviderContract`를 include하면 공통 동작(에러 변환, 설정 검증, 응답 형식)을 같은 기준으로 검증합니다.
 
+### 환경 변수
+
+`.env.example`을 `.env`로 복사해 채웁니다. `.env`는 git에 올리지 않습니다. 개발·테스트 DB 비밀번호(`DATABASE_PASSWORD`)도
+저장소에 두지 않고 `.env`로 넣습니다. CI는 `DATABASE_URL`로 접속합니다.
+
+로그에는 질문 원문을 남기지 않습니다(`config/initializers/filter_parameter_logging.rb`의 `question`, `q`).
+개발 서버 포트는 이 컴퓨터(127.0.0.1)에만 엽니다.
+
 ### 테스트
 
 ```bash
