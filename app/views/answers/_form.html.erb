@@ -1,0 +1,47 @@
+<%= form_with model: answer, url: answers_path, class: "question-form #{UiHelper::CARD} p-4 sm:px-5",
+  data: { controller: "question", question_max_value: Answer::MAX_QUESTION_LENGTH,
+    question_over_limit_class: "font-semibold text-red-700 dark:text-red-300" } do |form| %>
+  <% messages = answer.errors[:base] + answer.errors.messages_for(:question) %>
+  <% if messages.any? %>
+    <%= notice_tag :danger, role: "alert" do %>
+      <% messages.each do |message| %><p><%= message %></p><% end %>
+    <% end %>
+  <% end %>
+
+  <%= form.label :question, "질문", class: "sr-only" %>
+  <%= form.text_area :question, rows: 4, required: true, maxlength: Answer::MAX_QUESTION_LENGTH,
+    placeholder: "탈퇴한 회원의 개인정보는 언제까지 지워야 하나요?",
+    class: "block min-h-28 w-full resize-y rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-base/relaxed " \
+      "text-stone-900 placeholder:text-stone-400 focus:outline-2 focus:outline-offset-1 focus:outline-blue-600 " \
+      "dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100 dark:placeholder:text-stone-500",
+    aria: { describedby: "question-hint" },
+    data: { question_target: "input", action: "input->question#update keydown->question#submitOnShortcut" } %>
+
+  <%= notice_tag :warning, class: "mt-2", hidden: true, role: "status", data: { question_target: "warning" } do %>
+    <p>개인정보(전화번호·이메일·주민등록번호 등)로 보이는 내용이 있습니다. 보내면 해당 부분을 가리고 처리하지만, 가능하면 지우고 질문해 주세요.</p>
+  <% end %>
+
+  <div class="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+    <p id="question-hint" class="<%= UiHelper::HINT %> flex-auto">
+      <span data-question-target="count">0</span> / <%= Answer::MAX_QUESTION_LENGTH.to_fs(:delimited) %>자
+      <span class="max-md:hidden">· Ctrl+Enter로 보내기</span>
+    </p>
+    <% if Rails.env.local? %>
+      <label class="inline-flex items-center gap-1.5 text-[13px] text-stone-500 dark:text-stone-400">
+        <span>provider <small>(개발용)</small></span>
+        <%= form.select :provider, Llm.provider_names.map(&:to_s),
+          { selected: answer.provider || Rails.application.config_for(:llm)[:default_provider] },
+          class: "rounded-lg border border-stone-300 bg-white px-1.5 py-1 dark:border-stone-600 dark:bg-stone-900" %>
+      </label>
+    <% end %>
+    <%= form.submit "질문하기", class: "#{UiHelper::BUTTON_PRIMARY} max-md:w-full", data: { turbo_submits_with: "보내는 중…" } %>
+  </div>
+
+  <div class="examples mt-3 flex flex-wrap items-center gap-1.5 border-t border-stone-200 pt-3 dark:border-stone-800">
+    <span class="<%= UiHelper::HINT %>">예시</span>
+    <% AnswersController::EXAMPLES.each do |example| %>
+      <button type="button" data-action="question#fill" data-question-text-param="<%= example %>"
+        class="chip cursor-pointer rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1 text-left text-[13px] text-stone-600 hover:border-stone-300 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-800/50 dark:text-stone-300 dark:hover:text-stone-100"><%= example %></button>
+    <% end %>
+  </div>
+<% end %>

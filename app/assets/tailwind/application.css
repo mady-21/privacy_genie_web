@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+/* 화면 클래스는 뷰와 app/helpers/ui_helper.rb에 Tailwind 유틸리티로 쓴다. 여기에는 전역 설정만 둔다. */
+@theme {
+  --font-sans: system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+}
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+}

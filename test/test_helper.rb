@@ -4,6 +4,8 @@ require_relative "../config/environment"
 require "rails/test_help"
 require_relative "support/fake_doc_client"
 require_relative "support/llm_provider_contract"
+require_relative "support/fake_llm"
+require_relative "support/answer_helpers"
 
 module EmbeddingHelpers
   # 축별 가중치로 만든 길이 1의 벡터. 예: embedding(0 => 1, 1 => 1)은 0번·1번 축 사이 45도.

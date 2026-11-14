@@ -1,0 +1,27 @@
+<% all = answer.citations.to_a %>
+<% cited = all.select(&:cited) %>
+<% if cited.any? %>
+  <% primary, rest, rest_label = cited, all - cited, "함께 검색된 조문" %>
+<% elsif answer.completed? && (answer.outcome_no_basis? || answer.outcome_refused?) %>
+  <% primary, rest, rest_label = [], all, "가장 가까웠던 조문" %>
+<% else %>
+  <% primary, rest, rest_label = all, [], nil %>
+<% end %>
+
+<% if primary.any? %>
+  <h2 class="<%= UiHelper::EYEBROW %> mb-0"><%= cited.any? ? "근거 조문" : "검색된 조문" %></h2>
+  <% primary.each do |citation| %>
+    <%= render "citation", citation: citation, back_link: citation.cited %>
+  <% end %>
+<% end %>
+
+<% if rest.any? %>
+  <details class="related">
+    <summary class="cursor-pointer py-1 text-sm text-stone-600 dark:text-stone-400"><%= rest_label %> <%= rest.size %>개</summary>
+    <div class="mt-2 flex flex-col gap-2.5">
+      <% rest.each do |citation| %>
+        <%= render "citation", citation: citation, back_link: false %>
+      <% end %>
+    </div>
+  </details>
+<% end %>

@@ -1,0 +1,24 @@
+<article id="citation-<%= citation.number %>"
+  class="citation <%= UiHelper::CARD %> scroll-mt-4 px-4 py-3 target:border-blue-600 target:bg-yellow-50 dark:target:border-blue-400 dark:target:bg-yellow-950/40">
+  <header class="flex items-start gap-2">
+    <span class="min-w-6 shrink-0 rounded bg-blue-50 px-1 text-center text-[13px] font-bold text-blue-800 dark:bg-blue-950 dark:text-blue-200"
+      aria-label="근거 조문 <%= citation.number %>"><%= citation.number %></span>
+    <h3 class="text-[15px]/normal font-semibold"><%= citation.heading %></h3>
+  </header>
+  <p class="my-1.5 flex flex-wrap gap-1">
+    <%= citation_badge(citation) %>
+    <% if citation.part_label %><%= badge_tag "조문 #{citation.part_label}" %><% end %>
+  </p>
+  <details class="citation-body group">
+    <summary class="cursor-pointer list-none text-sm text-stone-600 dark:text-stone-400 [&::-webkit-details-marker]:hidden">
+      <span class="group-open:hidden"><%= citation.text.squish.truncate(90) %></span>
+      <span class="whitespace-nowrap text-blue-700 dark:text-blue-300">
+        <span class="group-open:hidden">조문 전체 보기</span><span class="hidden group-open:inline">접기</span>
+      </span>
+    </summary>
+    <div class="mt-1.5 rounded-lg bg-stone-50 px-3 py-2.5 text-sm whitespace-pre-wrap dark:bg-stone-800/60"><%= citation.text %></div>
+  </details>
+  <% if back_link %>
+    <a href="#answer" class="back-link mt-1.5 inline-block text-[13px] text-blue-700 dark:text-blue-300" data-turbo="false">답변으로 돌아가기</a>
+  <% end %>
+</article>
